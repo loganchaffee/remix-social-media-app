@@ -8,18 +8,23 @@
     "dev": "node ./server.js",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "cross-env NODE_ENV=production node ./server.js",
+    "introspect": "drizzle-kit introspect",
     "typecheck": "tsc"
   },
   "dependencies": {
     "@remix-run/express": "^2.9.1",
     "@remix-run/node": "^2.9.1",
     "@remix-run/react": "^2.9.1",
+    "argon2": "^0.40.1",
     "compression": "^1.7.4",
+    "drizzle-orm": "^0.30.9",
     "express": "^4.18.2",
     "isbot": "^4.1.0",
     "morgan": "^1.10.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "mysql2": "^3.9.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.9.1",
@@ -30,13 +35,17 @@
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
     "@typescript-eslint/parser": "^6.7.4",
+    "autoprefixer": "^10.4.19",
     "cross-env": "^7.0.3",
+    "drizzle-kit": "^0.21.1",
     "eslint": "^8.38.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.28.1",
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
     "typescript": "^5.1.6",
     "vite": "^5.1.0",
     "vite-tsconfig-paths": "^4.2.1"

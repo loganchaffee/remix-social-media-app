@@ -1,0 +1,13 @@
+{
+  "version": "6",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1715444051798,
+      "tag": "0000_nice_proudstar",
+      "breakpoints": true
+    }
+  ]
+}
