@@ -6,7 +6,7 @@ export default function Profile() {
       <h1 className="text-4xl font-bold mb-10">Search</h1>
       <Form>
         <input
-          className="border-b border-gray-600 mb-10 block w-full p-1"
+          className="border-b mb-10 block w-full p-1"
           placeholder="Search for users"
         />
       </Form>

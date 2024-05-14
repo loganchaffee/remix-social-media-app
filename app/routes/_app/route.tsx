@@ -1,37 +1,30 @@
-import { Outlet } from "@remix-run/react";
+import { Outlet, useLoaderData } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 import stylesheet from "~/tailwind.css?url";
 import { Navbar } from "~/components/NavBar";
-import { getSession } from "~/sessions";
-import { db } from "~/db";
-import { user } from "drizzle/schema";
-import { eq } from "drizzle-orm";
+import { authenticateUser } from "~/utils/authenticateUser";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
 ];
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
+  const user = await authenticateUser(request);
 
-  const userId = session.get("userId");
-
-  if (!userId) {
+  if (!user) {
     return redirect("/login");
   }
 
-  const [currentUser] = db.select().from(user).where(eq(user.id, userId));
-
-  return json({
-    user: currentUser,
-  });
+  return json({ user });
 }
 
 export default function AppRoute() {
+  const { user } = useLoaderData<typeof loader>();
+
   return (
     <>
-      <Navbar username="logan" />
+      <Navbar username={user.username} />
       <div className="p-6">
         <div className="container">
           <Outlet />

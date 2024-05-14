@@ -17,6 +17,7 @@
     "@remix-run/react": "^2.9.1",
     "argon2": "^0.40.1",
     "compression": "^1.7.4",
+    "dayjs": "^1.11.11",
     "drizzle-orm": "^0.30.9",
     "express": "^4.18.2",
     "isbot": "^4.1.0",

@@ -1,4 +1,14 @@
-import type { MetaFunction } from "@remix-run/node";
+import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
+import { Post } from "./post";
+import { useFetcher, useLoaderData } from "@remix-run/react";
+import { json, redirect } from "@remix-run/node";
+import { db } from "~/db";
+import { post, user } from "drizzle/schema";
+import { v4 as uuid } from "uuid";
+import { authenticateUser } from "~/utils/authenticateUser";
+import { LoaderFunctionArgs } from "react-router";
+import { desc, eq } from "drizzle-orm";
+import { useState, useRef, useEffect } from "react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -10,41 +20,89 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-type PostProps = {
-  username: string;
-  content: string;
-};
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const content = formData.get("content");
 
-const Post = ({ username, content }: PostProps) => {
-  return (
-    <div className="p-5 rounded-md border mb-5">
-      <div className="border-b pb-2 text-gray-400">{username}</div>
-      <div className="py-5">{content}</div>
-    </div>
-  );
-};
+  const user = await authenticateUser(request);
 
-const PostInput = () => {
-  return (
-    <div className="flex flex-col mb-5">
-      <textarea
-        className="border-b border-gray-600 p-1 block mb-3 resize-none"
-        placeholder="Say something"
-        rows={1}
-      />
-      <button className="text-white bg-green-500 hover:bg-green-600 py-1 px-4 rounded-lg ml-auto">
-        Send
-      </button>
-    </div>
-  );
-};
+  if (!user) {
+    return redirect("/login");
+  }
+
+  if (typeof content !== "string" || !content) {
+    return json({ error: "Invalid content" });
+  }
+
+  const postId = uuid();
+
+  await db.insert(post).values({
+    user_id: user.id,
+    id: postId,
+    content,
+  });
+
+  return json({ postId });
+}
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const currentUser = await authenticateUser(request);
+
+  if (!currentUser) {
+    return redirect("/login");
+  }
+
+  const postData = await db
+    .select()
+    .from(post)
+    .where(eq(post.user_id, currentUser.id))
+    .leftJoin(user, eq(post.user_id, user.id))
+    .orderBy(desc(post.created_at))
+    .execute();
+
+  return json({ postData });
+}
 
 export default function Index() {
+  const { postData } = useLoaderData<typeof loader>();
+
+  const [value, setValue] = useState("");
+
+  const fetcher = useFetcher();
+
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+    }
+  }, [value]);
+
   return (
     <div>
-      <PostInput />
-      {new Array(3).fill("").map((_, i) => (
-        <Post key={i} username="logan" content="hot take. trump. ugh." />
+      <fetcher.Form method="post" onSubmit={() => setValue("")}>
+        <div className="flex flex-col mb-5">
+          <textarea
+            ref={inputRef}
+            name="content"
+            className="border-b p-1 block mb-3 resize-none overflow-hidden"
+            placeholder="Say something"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+          <button className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg ml-auto">
+            Send
+          </button>
+        </div>
+      </fetcher.Form>
+      {postData.map(({ post, user }, i) => (
+        <Post
+          key={i}
+          username={user?.username ?? ""}
+          content={post.content}
+          createdAt={post.created_at ?? ""}
+        />
       ))}
     </div>
   );

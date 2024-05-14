@@ -1,16 +1,14 @@
-import {
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
-  json,
-  redirect,
-} from "@remix-run/node";
-import { Form } from "@remix-run/react";
+import { ActionFunctionArgs, json, redirect } from "@remix-run/node";
+import { Form, Link } from "@remix-run/react";
 import { eq } from "drizzle-orm";
 import { user } from "drizzle/schema";
 import { db } from "~/db";
 import { commitSession, getSession } from "~/sessions";
 import { v4 as uuid } from "uuid";
 import argon2 from "argon2";
+import { session as sessionTable } from "~/db/scheme";
+import { dateToTimestamp } from "~/utils/dateToTimestamp";
+import { getDateDaysFromNow } from "~/utils/getDateDaysFromNow";
 
 export async function action({ request }: ActionFunctionArgs) {
   const form = await request.formData();
@@ -23,9 +21,7 @@ export async function action({ request }: ActionFunctionArgs) {
     !username ||
     !password
   ) {
-    throw new Response("You must enter a valid username and password.", {
-      status: 500,
-    });
+    return json({ error: "Invalid username or password" });
   }
 
   const [duplicate] = await db
@@ -34,24 +30,30 @@ export async function action({ request }: ActionFunctionArgs) {
     .where(eq(user.username, username));
 
   if (duplicate) {
-    throw new Response("That username is already taken.", { status: 500 });
+    return json({ error: "Username already taken" });
   }
 
   const hashedPassword = await argon2.hash(password);
 
-  const id = uuid();
+  const userId = uuid();
 
   await db.insert(user).values({
-    id,
+    id: userId,
     username,
     password: hashedPassword,
   });
 
+  const sessionId = uuid();
+
+  await db.insert(sessionTable).values({
+    user_id: userId,
+    id: sessionId,
+    expires_at: dateToTimestamp(getDateDaysFromNow(7)),
+  });
+
   const session = await getSession();
 
-  session.set("userId", id);
-
-  console.log(session.data);
+  session.set("sessionId", userId);
 
   return redirect("/", {
     headers: {
@@ -63,21 +65,28 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Login() {
   return (
     <div>
-      <h1 className="text-4xl font-bold mb-10">Login</h1>
+      <h1 className="text-4xl font-bold mb-10">Sign Up</h1>
       <Form method="post">
         <input
           name="username"
-          className="border-b border-gray-600 mb-10 block w-full p-1"
+          className="border-b mb-10 block w-full p-1"
           placeholder="Enter username"
         />
         <input
           name="password"
-          className="border-b border-gray-600 mb-10 block w-full p-1"
+          className="border-b mb-10 block w-full p-1"
           placeholder="Enter password"
         />
-        <button className="text-white bg-green-500 hover:bg-green-600 py-1 px-4 rounded-lg">
-          Signup
-        </button>
+
+        <div className="flex justify-between">
+          <button className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg">
+            Signup
+          </button>
+
+          <Link to="/login" className="text-blue-500">
+            Login instead
+          </Link>
+        </div>
       </Form>
     </div>
   );
