@@ -1,21 +1,15 @@
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
-import { eq } from "drizzle-orm";
-import { db } from "~/db";
-import { destroySession, getSession } from "~/sessions";
-import { session as sessionTable } from "~/db/scheme";
+import { destroySession } from "~/sessions";
+import { requireUserSession } from "~/utils/requireUserSession";
 
 export async function action({ request }: ActionFunctionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
+  const { session } = await requireUserSession(request);
 
-  const id = session.get("sessionId");
-
-  if (!id) {
+  if (!session.id) {
     return redirect("/login");
   }
 
-  await db.delete(sessionTable).where(eq(sessionTable.id, id));
-
-  await destroySession(session);
+  // await db.delete(sessionTable).where(eq(sessionTable.id, session.id));
 
   return redirect("/login", {
     headers: {

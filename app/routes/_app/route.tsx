@@ -1,32 +1,33 @@
-import { Outlet, useLoaderData } from "@remix-run/react";
-import { json, redirect } from "@remix-run/node";
+import { Outlet, json } from "@remix-run/react";
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 import stylesheet from "~/tailwind.css?url";
 import { Navbar } from "~/components/NavBar";
-import { authenticateUser } from "~/utils/authenticateUser";
+import { requireUserSession } from "~/utils/requireUserSession";
+import { commitSession } from "~/sessions";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
 ];
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await authenticateUser(request);
+  const { user, session } = await requireUserSession(request);
 
-  if (!user) {
-    return redirect("/login");
-  }
-
-  return json({ user });
+  return json(
+    { user },
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    }
+  );
 }
 
 export default function AppRoute() {
-  const { user } = useLoaderData<typeof loader>();
-
   return (
     <>
-      <Navbar username={user.username} />
+      <Navbar />
       <div className="p-6">
-        <div className="container">
+        <div className="container relative max-w-[40rem]">
           <Outlet />
         </div>
       </div>

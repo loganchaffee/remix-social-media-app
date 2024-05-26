@@ -1,20 +1,17 @@
 import { ActionFunctionArgs, json, redirect } from "@remix-run/node";
-import { Form, Link } from "@remix-run/react";
-import { eq } from "drizzle-orm";
-import { user } from "drizzle/schema";
-import { db } from "~/db";
+import { Form, Link, useActionData } from "@remix-run/react";
 import { commitSession, getSession } from "~/sessions";
-import { v4 as uuid } from "uuid";
-import argon2 from "argon2";
-import { session as sessionTable } from "~/db/scheme";
-import { dateToTimestamp } from "~/utils/dateToTimestamp";
-import { getDateDaysFromNow } from "~/utils/getDateDaysFromNow";
+import { useToast } from "~/contexts/ToastContext";
+import { useEffect } from "react";
+import { UserService } from "~/services/UserService";
 
 export async function action({ request }: ActionFunctionArgs) {
+  // Get form data
   const form = await request.formData();
   const username = form.get("username");
   const password = form.get("password");
 
+  // Validate form data
   if (
     typeof username !== "string" ||
     typeof password !== "string" ||
@@ -24,45 +21,40 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ error: "Invalid username or password" });
   }
 
-  const [duplicate] = await db
-    .select()
-    .from(user)
-    .where(eq(user.username, username));
+  try {
+    // Create new user
+    const user = await new UserService().createUser(username, password);
 
-  if (duplicate) {
-    return json({ error: "Username already taken" });
+    // Create new session
+    const session = await getSession();
+    session.set("userId", user.id);
+
+    return redirect("/", {
+      headers: {
+        // Set cookie and create session in DB
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  } catch (error) {
+    console.log(error instanceof Error ? error.message : error);
+
+    return json({ error: "Something went wrong. Please Try again later." });
   }
-
-  const hashedPassword = await argon2.hash(password);
-
-  const userId = uuid();
-
-  await db.insert(user).values({
-    id: userId,
-    username,
-    password: hashedPassword,
-  });
-
-  const sessionId = uuid();
-
-  await db.insert(sessionTable).values({
-    user_id: userId,
-    id: sessionId,
-    expires_at: dateToTimestamp(getDateDaysFromNow(7)),
-  });
-
-  const session = await getSession();
-
-  session.set("sessionId", userId);
-
-  return redirect("/", {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
-  });
 }
 
 export default function Login() {
+  const actionData = useActionData<typeof action>();
+
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const error = actionData?.error;
+
+    if (error) {
+      toast(error);
+    }
+  }, [actionData, toast]);
+
   return (
     <div>
       <h1 className="text-4xl font-bold mb-10">Sign Up</h1>
@@ -73,19 +65,18 @@ export default function Login() {
           placeholder="Enter username"
         />
         <input
+          type="password"
           name="password"
           className="border-b mb-10 block w-full p-1"
           placeholder="Enter password"
         />
-
         <div className="flex justify-between">
-          <button className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg">
-            Signup
-          </button>
-
           <Link to="/login" className="text-blue-500">
             Login instead
           </Link>
+          <button className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg">
+            Signup
+          </button>
         </div>
       </Form>
     </div>

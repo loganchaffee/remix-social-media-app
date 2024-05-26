@@ -1,31 +1,39 @@
+import {
+  UserIcon,
+  NewspaperIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/solid";
 import { Form, Link } from "@remix-run/react";
 
-export const Navbar = ({ username }: { username: string }) => {
+export const Navbar = () => {
   return (
-    <nav className="bg-gray-300 px-6">
-      <div className="py-4 flex justify-between items-center container">
-        <div className="flex items-center container gap-3">
-          <Link
-            to="/profile"
-            className="text-gray-500 font-semibold text-lg hover:text-gray-600"
-          >
-            {username}
-          </Link>
+    <nav className="bg-gray-100 px-6">
+      <div className="py-4 flex justify-between items-center container max-w-[40rem]">
+        <div className="flex items-center container gap-3 ">
           <Link
             to="/"
-            className="text-gray-500 font-semibold text-lg hover:text-gray-600"
+            className="text-gray-500 font-semibold text-lg hover:text-gray-600 flex gap-1"
           >
-            Feed
+            <NewspaperIcon className="size-6" />
+            <span className="max-sm:hidden">Feed</span>
+          </Link>
+          <Link
+            to="/profile"
+            className="text-gray-500 font-semibold text-lg hover:text-gray-600 flex gap-1"
+          >
+            <UserIcon className="size-6" />
+            <span className="max-sm:hidden">Profile</span>
           </Link>
           <Link
             to="/users"
-            className="text-gray-500 font-semibold text-lg hover:text-gray-600"
+            className="text-gray-500 font-semibold text-lg hover:text-gray-600 flex gap-1"
           >
-            Search
+            <MagnifyingGlassIcon className="size-6" />
+            <span className="max-sm:hidden">Search Users</span>
           </Link>
         </div>
         <Form method="post" action="/logout">
-          <button className="bg-blue-500 text-white hover:bg-blue-600 py-1 px-4 rounded-lg">
+          <button className="text-gray-500 font-semibold text-lg hover:text-gray-600 flex gap-1">
             Logout
           </button>
         </Form>

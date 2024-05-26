@@ -1,109 +1,168 @@
 import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Post } from "./post";
 import { useFetcher, useLoaderData } from "@remix-run/react";
-import { json, redirect } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { db } from "~/db";
-import { post, user } from "drizzle/schema";
-import { v4 as uuid } from "uuid";
-import { authenticateUser } from "~/utils/authenticateUser";
+import { follow, post, user } from "drizzle/schema";
 import { LoaderFunctionArgs } from "react-router";
-import { desc, eq } from "drizzle-orm";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { requireUserSession } from "~/utils/requireUserSession";
+import { desc, eq, or } from "drizzle-orm";
+import { Post } from "./components/Post";
+import { union } from "drizzle-orm/mysql-core";
+import { InfiniteScroller } from "~/components/InfinateScroller";
+import { Spinner } from "~/components/Spinner";
+import { PostInput } from "./components/PostInput";
+import { createPost, deletePost } from "./actions";
+import { commitSession } from "~/sessions";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "Remix Book" },
+    { title: "Social Media App" },
     {
-      name: "Remix book. Simple social media.",
-      content: "Welcome Remix Book!",
+      name: "Social Media App",
+      content: "Simple social media app built with Remix",
     },
   ];
 };
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const content = formData.get("content");
+  const intent = (await request.clone().formData()).get("intent");
 
-  const user = await authenticateUser(request);
-
-  if (!user) {
-    return redirect("/login");
+  switch (intent) {
+    case "createPost": {
+      return await createPost(request);
+    }
+    case "deletePost": {
+      return await deletePost(request);
+    }
+    default:
+      return null;
   }
-
-  if (typeof content !== "string" || !content) {
-    return json({ error: "Invalid content" });
-  }
-
-  const postId = uuid();
-
-  await db.insert(post).values({
-    user_id: user.id,
-    id: postId,
-    content,
-  });
-
-  return json({ postId });
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const currentUser = await authenticateUser(request);
+  const { session, user: currentUser } = await requireUserSession(request);
 
-  if (!currentUser) {
-    return redirect("/login");
-  }
+  const searchParams = new URL(request.url).searchParams;
 
-  const postData = await db
-    .select()
-    .from(post)
-    .where(eq(post.user_id, currentUser.id))
-    .leftJoin(user, eq(post.user_id, user.id))
-    .orderBy(desc(post.created_at))
-    .execute();
+  const page = Number(searchParams.get("page") ?? 1);
 
-  return json({ postData });
+  const pageSize = Number(searchParams.get("pageSize") ?? 10);
+
+  const posts = await union(
+    // Posts from those the user follows
+    db
+      .select({
+        id: post.id,
+        content: post.content,
+        createdAt: post.created_at,
+        updatedAt: post.updated_at,
+        authorId: post.user_id,
+        authorUsername: user.username,
+      })
+      .from(post)
+      .leftJoin(user, eq(post.user_id, user.id))
+      .innerJoin(follow, eq(follow.followee, post.user_id))
+      .where(
+        or(
+          eq(follow.follower, currentUser.id)
+          // eq(post.user_id, currentUser.id)
+        )
+      ),
+    // User's own posts
+    db
+      .select({
+        id: post.id,
+        content: post.content,
+        createdAt: post.created_at,
+        updatedAt: post.updated_at,
+        authorId: post.user_id,
+        authorUsername: user.username,
+      })
+      .from(post)
+      .leftJoin(user, eq(post.user_id, user.id))
+      .where(eq(post.user_id, currentUser.id))
+  )
+    .limit(pageSize)
+    .offset((page - 1) * pageSize)
+    .orderBy(desc(post.created_at));
+
+  return json(
+    { posts, page, pageSize, user: currentUser },
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    }
+  );
+}
+
+function isDefined<T>(value: T | undefined): value is T {
+  return value !== undefined;
 }
 
 export default function Index() {
-  const { postData } = useLoaderData<typeof loader>();
+  const { posts: initialPosts } = useLoaderData<typeof loader>();
 
-  const [value, setValue] = useState("");
-
-  const fetcher = useFetcher();
-
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [posts, setPosts] = useState<typeof initialPosts>(initialPosts);
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.style.height = "auto";
-      inputRef.current.style.height = inputRef.current.scrollHeight + "px";
+    setPosts((prev) => {
+      const newPosts = [...initialPosts, ...prev];
+
+      const uniquePosts = Array.from(new Set(newPosts.map((post) => post.id)))
+        .map((id) => newPosts.find((post) => post.id === id))
+        .filter(isDefined);
+
+      return uniquePosts;
+    });
+  }, [initialPosts]);
+
+  const fetcher = useFetcher<typeof loader>();
+
+  function loadNextPage() {
+    const nextPage = fetcher.data ? fetcher.data.page + 1 : 2;
+
+    fetcher.load(`?index&page=${nextPage}`);
+  }
+
+  useEffect(() => {
+    if (fetcher?.data?.posts) {
+      const nextPageOfPosts = fetcher.data.posts;
+
+      setPosts((prev) => {
+        const newPosts = [...prev, ...nextPageOfPosts];
+
+        const uniquePosts = Array.from(new Set(newPosts.map((post) => post.id)))
+          .map((id) => newPosts.find((post) => post.id === id))
+          .filter(isDefined);
+
+        return uniquePosts;
+      });
     }
-  }, [value]);
+  }, [fetcher?.data?.posts]);
+
+  function deletePost(id: string) {
+    setPosts((prev) => prev.filter((p) => p.id !== id));
+  }
 
   return (
     <div>
-      <fetcher.Form method="post" onSubmit={() => setValue("")}>
-        <div className="flex flex-col mb-5">
-          <textarea
-            ref={inputRef}
-            name="content"
-            className="border-b p-1 block mb-3 resize-none overflow-hidden"
-            placeholder="Say something"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          />
-          <button className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg ml-auto">
-            Send
-          </button>
+      <h1 className="text-4xl font-bold mb-10">News Feed</h1>
+      <PostInput />
+      <InfiniteScroller
+        loading={fetcher.state === "loading"}
+        loadNext={loadNextPage}
+      >
+        {posts.map((post) => (
+          <Post key={post.id} post={post} deletePost={deletePost} />
+        ))}
+      </InfiniteScroller>
+      {fetcher.state === "loading" && (
+        <div className="flex justify-center">
+          <Spinner />
         </div>
-      </fetcher.Form>
-      {postData.map(({ post, user }, i) => (
-        <Post
-          key={i}
-          username={user?.username ?? ""}
-          content={post.content}
-          createdAt={post.created_at ?? ""}
-        />
-      ))}
+      )}
     </div>
   );
 }

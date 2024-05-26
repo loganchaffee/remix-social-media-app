@@ -8,6 +8,7 @@ import {
   varchar,
   timestamp,
   datetime,
+  longtext,
 } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
 
@@ -21,15 +22,17 @@ export const follow = mysqlTable(
     followee: varchar("followee", { length: 255 })
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    created_at: timestamp("created_at", { mode: "string" }).defaultNow(),
-    updated_at: datetime("updated_at", { mode: "string" }).default(
-      sql`(CURRENT_TIMESTAMP)`
-    ),
+    created_at: timestamp("created_at", { mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updated_at: datetime("updated_at", { mode: "string" })
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
   },
   (table) => {
     return {
-      e: index("followee").on(table.followee),
       r: index("follower").on(table.follower),
+      e: index("followee").on(table.followee),
       follow_id: primaryKey({ columns: [table.id], name: "follow_id" }),
     };
   }
@@ -43,10 +46,12 @@ export const post = mysqlTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     content: varchar("content", { length: 255 }).notNull(),
-    created_at: timestamp("created_at", { mode: "string" }).defaultNow(),
-    updated_at: datetime("updated_at", { mode: "string" }).default(
-      sql`(CURRENT_TIMESTAMP)`
-    ),
+    created_at: timestamp("created_at", { mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updated_at: datetime("updated_at", { mode: "string" })
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
   },
   (table) => {
     return {
@@ -63,11 +68,13 @@ export const session = mysqlTable(
     user_id: varchar("user_id", { length: 255 })
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    created_at: timestamp("created_at", { mode: "string" }).defaultNow(),
-    updated_at: datetime("updated_at", { mode: "string" }).default(
-      sql`(CURRENT_TIMESTAMP)`
-    ),
-    expires_at: timestamp("expires_at", { mode: "string" }),
+    created_at: timestamp("created_at", { mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updated_at: datetime("updated_at", { mode: "string" })
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
+    expires_at: timestamp("expires_at", { mode: "string" }).notNull(),
   },
   (table) => {
     return {
@@ -83,10 +90,13 @@ export const user = mysqlTable(
     id: varchar("id", { length: 255 }).notNull(),
     username: varchar("username", { length: 255 }).notNull(),
     password: varchar("password", { length: 255 }).notNull(),
-    created_at: timestamp("created_at", { mode: "string" }).defaultNow(),
-    updated_at: datetime("updated_at", { mode: "string" }).default(
-      sql`(CURRENT_TIMESTAMP)`
-    ),
+    bio: longtext("bio"),
+    created_at: timestamp("created_at", { mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updated_at: datetime("updated_at", { mode: "string" })
+      .default(sql`(CURRENT_TIMESTAMP)`)
+      .notNull(),
   },
   (table) => {
     return {
@@ -94,3 +104,4 @@ export const user = mysqlTable(
     };
   }
 );
+
