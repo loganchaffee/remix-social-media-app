@@ -1,9 +1,10 @@
-import { json } from "@remix-run/node";
 import { eq } from "drizzle-orm";
 import { user } from "drizzle/schema";
 import { db } from "~/db";
 import argon2 from "argon2";
 import { v4 as uuid } from "uuid";
+import { InferSelectModel } from "drizzle-orm";
+type User = InferSelectModel<typeof user>;
 
 export class UserService {
   /**
@@ -36,5 +37,28 @@ export class UserService {
     }
 
     return newUser;
+  }
+
+  /**
+   * @throws {Error} If the operation fails.
+   */
+  async getUserByUsername(username: string) {
+    const [targetUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.username, username));
+
+    if (!targetUser) {
+      throw new Error("Invalid username or password");
+    }
+
+    return targetUser;
+  }
+
+  /**
+   * @throws {Error} If the operation fails.
+   */
+  async updateUser(id: string, updates: Partial<User>) {
+    await db.update(user).set(updates).where(eq(user.id, id));
   }
 }

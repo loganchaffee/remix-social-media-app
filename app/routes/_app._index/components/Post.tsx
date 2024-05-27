@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { useRouteData } from "~/hooks/useRouteData";
 import { loader as appLoader } from "~/routes/_app/route";
 import { TrashIcon } from "@heroicons/react/24/solid";
+import { Intent } from "../route";
 
 type Props = {
   post: {
@@ -28,7 +29,7 @@ export const Post = ({ post, deletePost }: Props) => {
             <input hidden readOnly name="id" value={post.id} />
             <button
               name="intent"
-              value="deletePost"
+              value={Intent.DeletePost}
               className="border border-gray-300 text-gray-300 rounded px-3 py-1 hover:text-white hover:bg-red-500 hover:border-red-500 transition-colors"
             >
               <TrashIcon className="size-4" />

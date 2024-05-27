@@ -1,54 +1,48 @@
-import { ActionFunctionArgs, json, redirect } from "@remix-run/node";
-import { Form, Link, useActionData } from "@remix-run/react";
-import { eq } from "drizzle-orm";
-import { user } from "drizzle/schema";
-import { db } from "~/db";
-import { commitSession, getSession } from "~/sessions";
-import argon2 from "argon2";
-import { useEffect } from "react";
-import { useToast } from "~/contexts/ToastContext";
+import { ActionFunctionArgs, json, redirect } from '@remix-run/node';
+import { Form, Link, useActionData } from '@remix-run/react';
+import { commitSession, getSession } from '~/sessions';
+import argon2 from 'argon2';
+import { useEffect } from 'react';
+import { useToast } from '~/contexts/ToastContext';
+import { UserService } from '~/services/User.service';
 
 export async function action({ request }: ActionFunctionArgs) {
+  // Get form data
+  const form = await request.formData();
+  const username = form.get('username');
+  const password = form.get('password');
+
+  // Validate form data
+  if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
+    return json({ error: 'Invalid username or password' });
+  }
+
   try {
-    const form = await request.formData();
-    const username = form.get("username");
-    const password = form.get("password");
+    // Get exiting user
+    const currentUser = await new UserService().getUserByUsername(username);
 
-    if (
-      typeof username !== "string" ||
-      typeof password !== "string" ||
-      !username ||
-      !password
-    ) {
-      return json({ error: "Invalid username or password" });
-    }
-
-    const [currentUser] = await db
-      .select({ id: user.id, password: user.password })
-      .from(user)
-      .where(eq(user.username, username));
-
-    if (!currentUser) {
-      return json({ error: "Invalid username or password" });
-    }
-
+    // Check if passwords match
     const isPasswordMatch = await argon2.verify(currentUser.password, password);
 
     if (!isPasswordMatch) {
-      return json({ error: "Invalid username or password" });
+      return json({ error: 'Invalid username or password' });
     }
 
-    // Create new session object and add user id which create session in DB
+    // Create a new session
     const session = await getSession();
-    session.set("userId", currentUser.id);
 
-    return redirect("/", {
+    session.set('userId', currentUser.id);
+
+    return redirect('/', {
       headers: {
-        "Set-Cookie": await commitSession(session),
+        // Set cookie and create session in DB
+        'Set-Cookie': await commitSession(session),
       },
     });
   } catch (error) {
-    return json({ error: "Something went wrong" });
+    console.log(error instanceof Error ? error.message : error);
+
+    return json({ error: 'Something went wrong. Please Try again later.' });
   }
 }
 
@@ -67,25 +61,15 @@ export default function Login() {
 
   return (
     <div>
-      <h1 className="text-4xl font-bold mb-10">Login</h1>
-      <Form method="post">
-        <input
-          name="username"
-          className="border-b mb-10 block w-full p-1"
-          placeholder="Enter username"
-        />
-        <input
-          name="password"
-          className="border-b mb-10 block w-full p-1"
-          placeholder="Enter password"
-        />
-        <div className="flex justify-between">
-          <Link to="/signup" className="text-blue-500">
+      <h1 className='text-4xl font-bold mb-10'>Login</h1>
+      <Form method='post'>
+        <input name='username' className='border-b mb-10 block w-full p-1' placeholder='Enter username' />
+        <input name='password' className='border-b mb-10 block w-full p-1' placeholder='Enter password' />
+        <div className='flex justify-between'>
+          <button className='text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg'>Login</button>
+          <Link to='/signup' className='text-blue-500'>
             Sign up instead
           </Link>
-          <button className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg">
-            Login
-          </button>
         </div>
       </Form>
     </div>

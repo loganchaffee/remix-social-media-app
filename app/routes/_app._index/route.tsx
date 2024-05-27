@@ -1,19 +1,16 @@
 import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import { db } from "~/db";
-import { follow, post, user } from "drizzle/schema";
 import { LoaderFunctionArgs } from "react-router";
 import { useState, useEffect } from "react";
 import { requireUserSession } from "~/utils/requireUserSession";
-import { desc, eq, or } from "drizzle-orm";
 import { Post } from "./components/Post";
-import { union } from "drizzle-orm/mysql-core";
 import { InfiniteScroller } from "~/components/InfinateScroller";
 import { Spinner } from "~/components/Spinner";
 import { PostInput } from "./components/PostInput";
-import { createPost, deletePost } from "./actions";
-import { commitSession } from "~/sessions";
+import { PostService } from "~/services/Post.service";
+import { createPost } from "./actions/createPost";
+import { deletePost } from "./actions/deletePost";
 
 export const meta: MetaFunction = () => {
   return [
@@ -25,23 +22,28 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export enum Intent {
+  CreatePost = "CREATE_POST",
+  DeletePost = "DELETE_POST",
+}
+
 export async function action({ request }: ActionFunctionArgs) {
   const intent = (await request.clone().formData()).get("intent");
 
   switch (intent) {
-    case "createPost": {
+    case Intent.CreatePost: {
       return await createPost(request);
     }
-    case "deletePost": {
+    case Intent.DeletePost: {
       return await deletePost(request);
     }
     default:
-      return null;
+      return json({ error: "Invalid intent" });
   }
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { session, user: currentUser } = await requireUserSession(request);
+  const { user } = await requireUserSession(request);
 
   const searchParams = new URL(request.url).searchParams;
 
@@ -49,52 +51,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const pageSize = Number(searchParams.get("pageSize") ?? 10);
 
-  const posts = await union(
-    // Posts from those the user follows
-    db
-      .select({
-        id: post.id,
-        content: post.content,
-        createdAt: post.created_at,
-        updatedAt: post.updated_at,
-        authorId: post.user_id,
-        authorUsername: user.username,
-      })
-      .from(post)
-      .leftJoin(user, eq(post.user_id, user.id))
-      .innerJoin(follow, eq(follow.followee, post.user_id))
-      .where(
-        or(
-          eq(follow.follower, currentUser.id)
-          // eq(post.user_id, currentUser.id)
-        )
-      ),
-    // User's own posts
-    db
-      .select({
-        id: post.id,
-        content: post.content,
-        createdAt: post.created_at,
-        updatedAt: post.updated_at,
-        authorId: post.user_id,
-        authorUsername: user.username,
-      })
-      .from(post)
-      .leftJoin(user, eq(post.user_id, user.id))
-      .where(eq(post.user_id, currentUser.id))
-  )
-    .limit(pageSize)
-    .offset((page - 1) * pageSize)
-    .orderBy(desc(post.created_at));
-
-  return json(
-    { posts, page, pageSize, user: currentUser },
-    {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    }
+  const posts = await new PostService().getUserNewsFeedPage(
+    user.id,
+    page,
+    pageSize
   );
+
+  return json({ posts, page, pageSize, user });
 }
 
 function isDefined<T>(value: T | undefined): value is T {
@@ -102,7 +65,7 @@ function isDefined<T>(value: T | undefined): value is T {
 }
 
 export default function Index() {
-  const { posts: initialPosts } = useLoaderData<typeof loader>();
+  const { posts: initialPosts, user } = useLoaderData<typeof loader>();
 
   const [posts, setPosts] = useState<typeof initialPosts>(initialPosts);
 

@@ -1,6 +1,7 @@
 import { Form } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/Button";
+import { Intent } from "../route";
 
 export function PostInput() {
   const [value, setValue] = useState("");
@@ -15,7 +16,7 @@ export function PostInput() {
   }, [value]);
 
   return (
-    <Form method="post" onSubmit={() => setValue("")}>
+    <Form method="post" onSubmit={handleSubmit}>
       <div className="flex flex-col mb-5 border rounded p-3 bg-gray-100">
         <textarea
           ref={inputRef}
@@ -25,7 +26,7 @@ export function PostInput() {
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />
-        <Button name="intent" value="createPost" className="ml-auto">
+        <Button name="intent" value={Intent.CreatePost} className="ml-auto">
           Post
         </Button>
       </div>
