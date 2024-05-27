@@ -34,7 +34,7 @@
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "updated_at": {
           "default": "(CURRENT_TIMESTAMP)",
@@ -42,7 +42,7 @@
           "name": "updated_at",
           "type": "datetime",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "compositePrimaryKeys": {
@@ -129,7 +129,7 @@
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "updated_at": {
           "default": "(CURRENT_TIMESTAMP)",
@@ -137,7 +137,7 @@
           "name": "updated_at",
           "type": "datetime",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "compositePrimaryKeys": {
@@ -197,7 +197,7 @@
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "updated_at": {
           "default": "(CURRENT_TIMESTAMP)",
@@ -205,14 +205,14 @@
           "name": "updated_at",
           "type": "datetime",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "expires_at": {
           "autoincrement": false,
           "name": "expires_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "compositePrimaryKeys": {
@@ -273,13 +273,20 @@
           "primaryKey": false,
           "notNull": true
         },
+        "bio": {
+          "autoincrement": false,
+          "name": "bio",
+          "type": "longtext",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "default": "(CURRENT_TIMESTAMP)",
           "autoincrement": false,
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "updated_at": {
           "default": "(CURRENT_TIMESTAMP)",
@@ -287,7 +294,7 @@
           "name": "updated_at",
           "type": "datetime",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "compositePrimaryKeys": {

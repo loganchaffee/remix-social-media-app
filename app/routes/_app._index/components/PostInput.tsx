@@ -1,9 +1,25 @@
 import { Form } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/Button";
-import { Intent } from "../route";
+import { Intent, loader } from "../route";
+import { v4 as uuid } from "uuid";
+import { useRouteData } from "~/hooks/useRouteData";
+import { dateToDatetime } from "~/utils/dateToDateTime";
 
-export function PostInput() {
+type Props = {
+  addPost: (post: {
+    id: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+    authorId: string;
+    authorUsername: string | null;
+  }) => void;
+};
+
+export function PostInput({ addPost }: Props) {
+  const { user } = useRouteData<typeof loader>("routes/_app._index");
+
   const [value, setValue] = useState("");
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -15,8 +31,21 @@ export function PostInput() {
     }
   }, [value]);
 
+  function handleSubmit() {
+    setValue("");
+
+    addPost({
+      id: `temporary_${uuid()}`,
+      content: value,
+      authorId: user.id,
+      authorUsername: user.username,
+      createdAt: dateToDatetime(new Date()),
+      updatedAt: dateToDatetime(new Date()),
+    });
+  }
+
   return (
-    <Form method="post" onSubmit={() => setValue("")}>
+    <Form method="post" onSubmit={handleSubmit}>
       <div className="flex flex-col mb-5 border rounded p-3 bg-gray-100">
         <textarea
           ref={inputRef}
@@ -26,7 +55,12 @@ export function PostInput() {
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />
-        <Button name="intent" value={Intent.CreatePost} className="ml-auto">
+        <Button
+          disabled={!value}
+          name="intent"
+          value={Intent.CreatePost}
+          className="ml-auto"
+        >
           Post
         </Button>
       </div>

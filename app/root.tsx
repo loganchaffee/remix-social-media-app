@@ -23,7 +23,7 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="w-screen overflow-x-hidden">
         <ToastProvider>
           <ToastNotification />
 

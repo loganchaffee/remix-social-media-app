@@ -3,8 +3,11 @@ import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
   schema: "./app/db/schema.ts",
-  out: "./drizzle",
+  out: "./app/db",
   dialect: "mysql",
+  introspect: {
+    casing: "camel",
+  },
   dbCredentials: {
     user: "root",
     password: "",

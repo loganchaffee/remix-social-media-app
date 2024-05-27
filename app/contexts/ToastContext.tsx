@@ -46,22 +46,32 @@ export function ToastProvider({ children }: ToastProviderProps) {
   );
 }
 
-export function useToast(): ToastContextType {
+function useToastContext(): ToastContextType {
   const context = useContext(ToastContext);
 
   if (!context) {
-    throw new Error("useToast must be used within a ToastProvider");
+    throw new Error("useToastContext must be used within a ToastProvider");
   }
 
   return context;
 }
 
+export function useToast() {
+  const context = useContext(ToastContext);
+
+  if (!context) {
+    throw new Error("useToastContext must be used within a ToastProvider");
+  }
+
+  return context.toast;
+}
+
 export function ToastNotification() {
-  const { message, isOpen } = useToast();
+  const { message, isOpen } = useToastContext();
 
   return (
     <div
-      className="absolute top-3 right-3 bg-white p-3 w-fit max-w-80 border rounded z-10 flex items-center transition-all"
+      className="fixed top-3 right-3 bg-white p-3 w-fit max-w-80 border rounded z-20 flex items-center transition-all"
       style={
         isOpen
           ? { transform: "translateX(0)" }

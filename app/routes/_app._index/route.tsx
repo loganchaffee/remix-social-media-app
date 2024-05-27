@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
-import { useFetcher, useLoaderData } from "@remix-run/react";
+import { useActionData, useFetcher, useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import { LoaderFunctionArgs } from "react-router";
 import { useState, useEffect } from "react";
@@ -11,6 +11,8 @@ import { PostInput } from "./components/PostInput";
 import { PostService } from "~/services/Post.service";
 import { createPost } from "./actions/createPost";
 import { deletePost } from "./actions/deletePost";
+import { useToast } from "~/contexts/ToastContext";
+import { isDefined } from "~/utils/isDefined";
 
 export const meta: MetaFunction = () => {
   return [
@@ -45,6 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user } = await requireUserSession(request);
 
+  console.log(user);
   const searchParams = new URL(request.url).searchParams;
 
   const page = Number(searchParams.get("page") ?? 1);
@@ -60,18 +63,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return json({ posts, page, pageSize, user });
 }
 
-function isDefined<T>(value: T | undefined): value is T {
-  return value !== undefined;
-}
-
 export default function Index() {
-  const { posts: initialPosts, user } = useLoaderData<typeof loader>();
+  const { posts: initialPosts } = useLoaderData<typeof loader>();
+
+  const actionData = useActionData<typeof action>();
 
   const [posts, setPosts] = useState<typeof initialPosts>(initialPosts);
 
+  const fetcher = useFetcher<typeof loader>();
+
+  const toast = useToast();
+
+  // Update posts when loader data is revalidiated
   useEffect(() => {
     setPosts((prev) => {
-      const newPosts = [...initialPosts, ...prev];
+      const prevWithoutTempoary = prev.filter(
+        (post) => !post.id.includes("temporary")
+      );
+
+      const newPosts = [...initialPosts, ...prevWithoutTempoary];
 
       const uniquePosts = Array.from(new Set(newPosts.map((post) => post.id)))
         .map((id) => newPosts.find((post) => post.id === id))
@@ -81,14 +91,14 @@ export default function Index() {
     });
   }, [initialPosts]);
 
-  const fetcher = useFetcher<typeof loader>();
-
+  // Fetch next page of results
   function loadNextPage() {
     const nextPage = fetcher.data ? fetcher.data.page + 1 : 2;
 
     fetcher.load(`?index&page=${nextPage}`);
   }
 
+  // Insert next page of results into state
   useEffect(() => {
     if (fetcher?.data?.posts) {
       const nextPageOfPosts = fetcher.data.posts;
@@ -105,14 +115,27 @@ export default function Index() {
     }
   }, [fetcher?.data?.posts]);
 
+  // Toast notifcations for errors
+  useEffect(() => {
+    if (actionData && "error" in actionData) {
+      toast(actionData.error);
+    }
+  }, [actionData, toast]);
+
+  // Optomistic delete
   function deletePost(id: string) {
     setPosts((prev) => prev.filter((p) => p.id !== id));
   }
 
+  // Optomistic create
+  const addPost = (post: (typeof posts)[0]) => {
+    setPosts((prev) => [post, ...prev]);
+  };
+
   return (
     <div>
       <h1 className="text-4xl font-bold mb-10">News Feed</h1>
-      <PostInput />
+      <PostInput addPost={addPost} />
       <InfiniteScroller
         loading={fetcher.state === "loading"}
         loadNext={loadNextPage}
