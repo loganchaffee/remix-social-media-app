@@ -16,7 +16,7 @@ export function PostInput() {
   }, [value]);
 
   return (
-    <Form method="post" onSubmit={handleSubmit}>
+    <Form method="post" onSubmit={() => setValue("")}>
       <div className="flex flex-col mb-5 border rounded p-3 bg-gray-100">
         <textarea
           ref={inputRef}
