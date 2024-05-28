@@ -47,7 +47,6 @@ export async function action({ request }: ActionFunctionArgs) {
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user } = await requireUserSession(request);
 
-  console.log(user);
   const searchParams = new URL(request.url).searchParams;
 
   const page = Number(searchParams.get("page") ?? 1);

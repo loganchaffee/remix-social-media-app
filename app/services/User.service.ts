@@ -1,5 +1,5 @@
-import { eq, InferSelectModel } from "drizzle-orm";
-import { user } from "~/db/schema";
+import { and, count, eq, InferSelectModel, like } from "drizzle-orm";
+import { follow, user } from "~/db/schema";
 import { db } from "~/db";
 import argon2 from "argon2";
 import { v4 as uuid } from "uuid";
@@ -10,10 +10,14 @@ type GetUserOptions = {
   includePassword: boolean;
 };
 
+type SearchUsersFilters = {
+  searchQuery: string;
+  page: number;
+  pageSize: number;
+  currentUserId: string;
+};
+
 export class UserService {
-  /**
-   * @throws {Error} If the operation fails.
-   */
   async createUser(username: string, password: string) {
     const [duplicate] = await db
       .select()
@@ -43,9 +47,6 @@ export class UserService {
     return newUser;
   }
 
-  /**
-   * @throws {Error} If the operation fails.
-   */
   async getUserById<T extends GetUserOptions>(
     id: string,
     opt?: T
@@ -72,9 +73,6 @@ export class UserService {
     }
   }
 
-  /**
-   * @throws {Error} If the operation fails.
-   */
   async getUserByUsername<T extends GetUserOptions>(
     username: string,
     opt?: T
@@ -104,10 +102,43 @@ export class UserService {
     }
   }
 
-  /**
-   * @throws {Error} If the operation fails.
-   */
   async updateUser(id: string, updates: Partial<User>) {
     await db.update(user).set(updates).where(eq(user.id, id));
+  }
+
+  async searchUsers({
+    searchQuery,
+    page,
+    pageSize,
+    currentUserId,
+  }: SearchUsersFilters) {
+    const userPromise = db
+      .select({
+        id: user.id,
+        username: user.username,
+        bio: user.bio,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        followId: follow.id,
+      })
+      .from(user)
+      .leftJoin(
+        follow,
+        and(eq(follow.follower, currentUserId), eq(follow.followee, user.id))
+      )
+      .where(like(user.username, `%${searchQuery}%`))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize)
+      .orderBy(user.username);
+
+    const countPromise = db
+      .select({ userCount: count() })
+      .from(user)
+      .where(like(user.username, `%${searchQuery}%`))
+      .execute();
+
+    const [users, userCount] = await Promise.all([userPromise, countPromise]);
+
+    return { users, count: userCount[0].userCount };
   }
 }
