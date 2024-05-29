@@ -1,12 +1,14 @@
-import { and, desc, eq } from 'drizzle-orm';
-import { union } from 'drizzle-orm/mysql-core';
-import { follow, post, user } from '~/db/schema';
-import { db } from '~/db';
-import { v4 as uuid } from 'uuid';
+import { and, desc, eq } from "drizzle-orm";
+import { union } from "drizzle-orm/mysql-core";
+import { follow, post, user } from "~/db/schema";
+import { db } from "~/db";
+import { v4 as uuid } from "uuid";
 
 export class PostService {
   async deleteUserOwnPost(userId: string, postId: string) {
-    await db.delete(post).where(and(eq(post.userId, userId), eq(post.id, postId)));
+    await db
+      .delete(post)
+      .where(and(eq(post.userId, userId), eq(post.id, postId)));
   }
 
   async createPost(userId: string, content: string) {

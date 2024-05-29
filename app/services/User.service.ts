@@ -1,5 +1,13 @@
-import { and, count, eq, InferSelectModel, like } from "drizzle-orm";
-import { follow, user } from "~/db/schema";
+import {
+  and,
+  count,
+  eq,
+  inArray,
+  InferSelectModel,
+  like,
+  sql,
+} from "drizzle-orm";
+import { follow, session, user } from "~/db/schema";
 import { db } from "~/db";
 import argon2 from "argon2";
 import { v4 as uuid } from "uuid";
@@ -132,13 +140,77 @@ export class UserService {
       .orderBy(user.username);
 
     const countPromise = db
-      .select({ userCount: count() })
+      .select({ count: count() })
       .from(user)
       .where(like(user.username, `%${searchQuery}%`))
       .execute();
 
-    const [users, userCount] = await Promise.all([userPromise, countPromise]);
+    const [users, countResults] = await Promise.all([
+      userPromise,
+      countPromise,
+    ]);
 
-    return { users, count: userCount[0].userCount };
+    const userCount = countResults[0].count;
+
+    const formattedUsers = users.map((u) => {
+      const { followId, ...selectFields } = u;
+
+      return {
+        ...selectFields,
+        isFollowed: !!followId,
+      };
+    });
+
+    return { users: formattedUsers, count: userCount };
+  }
+
+  async adminSearchUsers({ searchQuery, page, pageSize }: SearchUsersFilters) {
+    const userPromise = db
+      .select({
+        id: user.id,
+        username: user.username,
+        bio: user.bio,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      })
+      .from(user)
+      .where(like(user.username, `%${searchQuery}%`))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize)
+      .orderBy(user.username);
+
+    const countPromise = db
+      .select({ count: count() })
+      .from(user)
+      .where(like(user.username, `%${searchQuery}%`))
+      .execute();
+
+    const [users, countResults] = await Promise.all([
+      userPromise,
+      countPromise,
+    ]);
+
+    const userCount = countResults[0].count;
+
+    const sessions = await db
+      .select()
+      .from(session)
+      .where(
+        users.length > 0
+          ? inArray(
+              session.userId,
+              users.map((u) => u.id)
+            )
+          : undefined
+      );
+
+    const formattedUsers = users.map((u) => {
+      return {
+        ...u,
+        sessions: sessions.filter((s) => s.userId === u.id),
+      };
+    });
+
+    return { users: formattedUsers, count: userCount };
   }
 }

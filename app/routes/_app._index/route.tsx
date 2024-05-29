@@ -13,6 +13,7 @@ import { createPost } from "./actions/createPost";
 import { deletePost } from "./actions/deletePost";
 import { useToast } from "~/contexts/ToastContext";
 import { isDefined } from "~/utils/isDefined";
+import { handleErrorResponse } from "~/utils/handleError";
 
 export const meta: MetaFunction = () => {
   return [
@@ -29,18 +30,16 @@ export enum Intent {
   DeletePost = "DELETE_POST",
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-  const intent = (await request.clone().formData()).get("intent");
+export async function action(args: ActionFunctionArgs) {
+  const intent = (await args.request.clone().formData()).get("intent");
 
   switch (intent) {
-    case Intent.CreatePost: {
-      return await createPost(request);
-    }
-    case Intent.DeletePost: {
-      return await deletePost(request);
-    }
+    case Intent.CreatePost:
+      return await createPost(args);
+    case Intent.DeletePost:
+      return await deletePost(args);
     default:
-      return json({ error: "Invalid intent" });
+      return handleErrorResponse(new Error("Invalid intent"));
   }
 }
 

@@ -58,7 +58,7 @@ export default function Profile() {
           className="flex justify-between items-center border-b p-3 pb-5 hover:bg-gray-100"
         >
           <span>{user.username}</span>
-          {user.followId && (
+          {user.isFollowed && (
             <span className="ml-3 text-gray-300 text-sm">Following</span>
           )}
         </Link>

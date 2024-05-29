@@ -3,7 +3,6 @@ import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 import stylesheet from "~/tailwind.css?url";
 import { requireUserSession } from "~/utils/requireUserSession";
 import { commitSession } from "~/sessions";
-import { AdminSideNav } from "./components/AdminSideNav";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
@@ -24,9 +23,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function AdminRoute() {
   return (
-    <div className="flex">
-      <AdminSideNav />
-      <div className="h-fit p-5">
+    <div className="p-6">
+      <div className="container relative max-w-[40rem]">
         <Outlet />
       </div>
     </div>

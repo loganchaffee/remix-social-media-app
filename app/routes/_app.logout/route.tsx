@@ -9,8 +9,6 @@ export async function action({ request }: ActionFunctionArgs) {
     return redirect("/login");
   }
 
-  // await db.delete(sessionTable).where(eq(sessionTable.id, session.id));
-
   return redirect("/login", {
     headers: {
       "Set-Cookie": await destroySession(session),

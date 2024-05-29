@@ -1,8 +1,9 @@
+import { requireUserSession } from "~/utils/requireUserSession";
 import { PostService } from "~/services/Post.service";
 import { handleErrorResponse } from "~/utils/handleError";
-import { requireUserSession } from "~/utils/requireUserSession";
+import { ActionFunctionArgs, json } from "@remix-run/node";
 
-export async function deletePost(request: Request) {
+export async function deletePost({ request }: ActionFunctionArgs) {
   const { user } = await requireUserSession(request);
 
   try {
@@ -18,7 +19,7 @@ export async function deletePost(request: Request) {
 
     await new PostService().deleteUserOwnPost(user.id, id);
 
-    return null;
+    return json(null);
   } catch (error) {
     return handleErrorResponse(error, "Failed to delete post");
   }

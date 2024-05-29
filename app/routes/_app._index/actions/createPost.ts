@@ -1,9 +1,9 @@
-import { json } from "@remix-run/node";
 import { requireUserSession } from "~/utils/requireUserSession";
 import { PostService } from "~/services/Post.service";
 import { handleErrorResponse } from "~/utils/handleError";
+import { ActionFunctionArgs, json } from "@remix-run/node";
 
-export async function createPost(request: Request) {
+export async function createPost({ request }: ActionFunctionArgs) {
   const { user } = await requireUserSession(request);
 
   try {
@@ -17,7 +17,7 @@ export async function createPost(request: Request) {
 
     await new PostService().createPost(user.id, content);
 
-    return null;
+    return json(null);
   } catch (error) {
     return handleErrorResponse(error, "Failed to create post");
   }
