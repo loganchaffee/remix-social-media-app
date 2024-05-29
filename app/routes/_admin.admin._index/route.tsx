@@ -5,6 +5,7 @@ import { Form, useLoaderData, useSubmit } from "@remix-run/react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/Button";
+import { Modal } from "~/components/Modal";
 import { TextInput } from "~/components/TextInput";
 import { UserService } from "~/services/User.service";
 import { requireUserSession } from "~/utils/requireUserSession";
@@ -36,6 +37,12 @@ export default function AdminUsersRoute() {
   const { users, searchQuery, pages, page } = useLoaderData<typeof loader>();
 
   const [value, setValue] = useState(searchQuery);
+
+  const [isOpen, setIsOpen] = useState(true);
+
+  const [selectedUser, setSelectedUser] = useState<(typeof users)[0] | null>(
+    null
+  );
 
   useEffect(() => {
     setValue(searchQuery);
@@ -78,6 +85,7 @@ export default function AdminUsersRoute() {
               >
                 Sessions
               </th>
+              <th />
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -89,11 +97,11 @@ export default function AdminUsersRoute() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap flex justify-between items-center gap-3">
                   {user.sessions.length} Active
-                  {!!user.sessions.length && (
-                    <Button>
-                      <PencilSquareIcon className="size-4" />
-                    </Button>
-                  )}
+                </td>
+                <td>
+                  <Button onClick={() => setSelectedUser(user)}>
+                    <PencilSquareIcon className="size-4" />
+                  </Button>
                 </td>
               </tr>
             ))}
@@ -118,6 +126,32 @@ export default function AdminUsersRoute() {
           Next
         </Button>
       </div>
+
+      <Modal
+        title={selectedUser?.username ?? ""}
+        isOpen={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+      >
+        {selectedUser && (
+          <div>
+            <p className="mb-3">Sessions:</p>
+            {selectedUser.sessions.map((session, i) => {
+              return (
+                <div
+                  key={session.id}
+                  className="mb-3 flex justify-between items-center"
+                >
+                  <p>
+                    <span className="mr-3">{i + 1}.</span>
+                    {dayjs(session.createdAt).format("M/D/YY")}
+                  </p>
+                  <Button>Delete</Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Modal>
     </>
   );
 }
