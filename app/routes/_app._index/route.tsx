@@ -14,6 +14,7 @@ import { deletePost } from "./actions/deletePost";
 import { useToast } from "~/contexts/ToastContext";
 import { isDefined } from "~/utils/isDefined";
 import { handleErrorResponse } from "~/utils/handleError";
+import { getIntent } from "~/utils/getIntent";
 
 export const meta: MetaFunction = () => {
   return [
@@ -31,7 +32,7 @@ export enum Intent {
 }
 
 export async function action(args: ActionFunctionArgs) {
-  const intent = (await args.request.clone().formData()).get("intent");
+  const intent = await getIntent(args);
 
   switch (intent) {
     case Intent.CreatePost:

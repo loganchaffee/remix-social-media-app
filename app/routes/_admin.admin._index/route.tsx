@@ -1,4 +1,4 @@
-import { PencilSquareIcon } from "@heroicons/react/24/solid";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useLoaderData, useSubmit } from "@remix-run/react";
@@ -8,7 +8,30 @@ import { Button } from "~/components/Button";
 import { Modal } from "~/components/Modal";
 import { TextInput } from "~/components/TextInput";
 import { UserService } from "~/services/User.service";
+import { handleErrorResponse } from "~/utils/handleError";
 import { requireUserSession } from "~/utils/requireUserSession";
+import { deleteSession } from "./actions/deleteSession";
+import { getIntent } from "~/utils/getIntent";
+import { ConfirmationModal } from "~/components/ConfirmationModal";
+import { deleteUser } from "./actions/deleteUser";
+
+enum Intent {
+  DELETE_SESSION = "DeleteSession",
+  DELETE_USER = "DeleteUser",
+}
+
+export async function action(args: LoaderFunctionArgs) {
+  const intent = await getIntent(args);
+
+  switch (intent) {
+    case Intent.DELETE_SESSION:
+      return deleteSession(args);
+    case Intent.DELETE_USER:
+      return deleteUser(args);
+    default:
+      return handleErrorResponse(new Error("Invalid intent"));
+  }
+}
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user } = await requireUserSession(request);
@@ -38,17 +61,41 @@ export default function AdminUsersRoute() {
 
   const [value, setValue] = useState(searchQuery);
 
-  const [isOpen, setIsOpen] = useState(true);
-
   const [selectedUser, setSelectedUser] = useState<(typeof users)[0] | null>(
     null
   );
 
+  const [stagedForDeletion, setStagedForDeletion] = useState(false);
+
+  // Sync search query with URL
   useEffect(() => {
     setValue(searchQuery);
   }, [searchQuery]);
 
+  // Sync selected user state with loader data
+  useEffect(() => {
+    const updatedSelectedUser = users.find(
+      (user) => user.id === selectedUser?.id
+    );
+
+    if (updatedSelectedUser) {
+      setSelectedUser(updatedSelectedUser);
+    } else {
+      setStagedForDeletion(false);
+      setSelectedUser(null);
+    }
+  }, [users, selectedUser?.id, setSelectedUser]);
+
   const submit = useSubmit();
+
+  function handleDeleteUser() {
+    if (selectedUser) {
+      submit(
+        { userId: selectedUser.id, intent: Intent.DELETE_USER },
+        { method: "post" }
+      );
+    }
+  }
 
   return (
     <>
@@ -129,12 +176,14 @@ export default function AdminUsersRoute() {
 
       <Modal
         title={selectedUser?.username ?? ""}
-        isOpen={!!selectedUser}
+        isOpen={!!selectedUser && !stagedForDeletion}
         onClose={() => setSelectedUser(null)}
       >
         {selectedUser && (
           <div>
-            <p className="mb-3">Sessions:</p>
+            {selectedUser.sessions.length > 0 && (
+              <p className="mb-3">Sessions:</p>
+            )}
             {selectedUser.sessions.map((session, i) => {
               return (
                 <div
@@ -145,13 +194,38 @@ export default function AdminUsersRoute() {
                     <span className="mr-3">{i + 1}.</span>
                     {dayjs(session.createdAt).format("M/D/YY")}
                   </p>
-                  <Button>Delete</Button>
+                  <Form method="post">
+                    <input
+                      hidden
+                      readOnly
+                      name="sessionId"
+                      value={session.id}
+                    />
+                    <button
+                      name="intent"
+                      value={Intent.DELETE_SESSION}
+                      className="border border-gray-300 text-gray-300 rounded px-3 py-1 hover:text-white hover:bg-red-500 hover:border-red-500 transition-colors"
+                    >
+                      <TrashIcon className="size-4" />
+                    </button>
+                  </Form>
                 </div>
               );
             })}
+            <Button variant="red" onClick={() => setStagedForDeletion(true)}>
+              Delete User
+            </Button>
           </div>
         )}
       </Modal>
+
+      <ConfirmationModal
+        title="Are you sure you want to delete this user?"
+        isOpen={stagedForDeletion}
+        confirmButtonVariant="red"
+        onConfirm={handleDeleteUser}
+        onCancel={() => setStagedForDeletion(false)}
+      />
     </>
   );
 }

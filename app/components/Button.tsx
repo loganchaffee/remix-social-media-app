@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes } from "react";
 
-type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "blue" | "blue-outline" | "red" | "red-outline";
 };
 
@@ -9,7 +9,7 @@ export const Button = ({
   className,
   variant = "blue",
   ...props
-}: Props) => {
+}: ButtonProps) => {
   let classes = "";
 
   switch (variant) {

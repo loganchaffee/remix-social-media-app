@@ -1,12 +1,4 @@
-import {
-  and,
-  count,
-  eq,
-  inArray,
-  InferSelectModel,
-  like,
-  sql,
-} from "drizzle-orm";
+import { and, count, eq, inArray, InferSelectModel, like } from "drizzle-orm";
 import { follow, session, user } from "~/db/schema";
 import { db } from "~/db";
 import argon2 from "argon2";
@@ -212,5 +204,13 @@ export class UserService {
     });
 
     return { users: formattedUsers, count: userCount };
+  }
+
+  async deleteUserSession(sessionId: string) {
+    await db.delete(session).where(eq(session.id, sessionId));
+  }
+
+  async deleteUser(userId: string) {
+    await db.delete(user).where(eq(user.id, userId));
   }
 }
