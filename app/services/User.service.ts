@@ -3,8 +3,10 @@ import { follow, session, user } from "~/db/schema";
 import { db } from "~/db";
 import argon2 from "argon2";
 import { v4 as uuid } from "uuid";
-type User = InferSelectModel<typeof user>;
-type UserWithoutPassword = Omit<User, "password">;
+
+export type User = InferSelectModel<typeof user>;
+
+export type UserWithoutPassword = Omit<User, "password">;
 
 type GetUserOptions = {
   includePassword: boolean;
@@ -61,6 +63,7 @@ export class UserService {
           id: user.id,
           username: user.username,
           bio: user.bio,
+          isAdmin: user.isAdmin,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         })
@@ -90,6 +93,7 @@ export class UserService {
           id: user.id,
           username: user.username,
           bio: user.bio,
+          isAdmin: user.isAdmin,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         })
@@ -117,6 +121,7 @@ export class UserService {
         id: user.id,
         username: user.username,
         bio: user.bio,
+        isAdmin: user.isAdmin,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         followId: follow.id,
@@ -161,6 +166,7 @@ export class UserService {
       .select({
         id: user.id,
         username: user.username,
+        isAdmin: user.isAdmin,
         bio: user.bio,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,

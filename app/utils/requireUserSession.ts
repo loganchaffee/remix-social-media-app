@@ -1,8 +1,15 @@
 import { destroySession, getSession } from "../sessions";
 import { redirect } from "@remix-run/node";
-import { UserService } from "~/services/User.service";
+import { UserService, UserWithoutPassword } from "~/services/User.service";
 
-export async function requireUserSession(request: Request) {
+type Options = {
+  isAdminRoute?: boolean;
+};
+
+export async function requireUserSession(
+  request: Request,
+  options: Options = {}
+) {
   const session = await getSession(request.headers.get("Cookie"));
   const sessionId = session.get("id");
   const userId = session.get("userId");
@@ -15,10 +22,10 @@ export async function requireUserSession(request: Request) {
     });
   }
 
-  try {
-    const user = await new UserService().getUserById(userId);
+  let user: UserWithoutPassword;
 
-    return { session, user };
+  try {
+    user = await new UserService().getUserById(userId);
   } catch (error) {
     throw redirect("/login", {
       headers: {
@@ -26,4 +33,10 @@ export async function requireUserSession(request: Request) {
       },
     });
   }
+
+  if (options.isAdminRoute && user.isAdmin === 0) {
+    throw redirect("/");
+  }
+
+  return { session, user };
 }

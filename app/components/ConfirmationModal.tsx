@@ -18,6 +18,7 @@ export function ConfirmationModal({
   return (
     <Modal
       title={title}
+      centerTitle={true}
       isOpen={isOpen}
       onClose={onCancel}
       hasCloseButton={false}

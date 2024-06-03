@@ -34,7 +34,7 @@ export async function action(args: LoaderFunctionArgs) {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user } = await requireUserSession(request);
+  const { user } = await requireUserSession(request, { isAdminRoute: true });
 
   const searchParams = new URL(request.url).searchParams;
 
@@ -91,7 +91,10 @@ export default function AdminUsersRoute() {
   function handleDeleteUser() {
     if (selectedUser) {
       submit(
-        { userId: selectedUser.id, intent: Intent.DELETE_USER },
+        {
+          userId: selectedUser.id,
+          intent: Intent.DELETE_USER,
+        },
         { method: "post" }
       );
     }
@@ -100,7 +103,6 @@ export default function AdminUsersRoute() {
   return (
     <>
       <h1 className="text-4xl font-bold mb-10">Users</h1>
-
       <Form onChange={(event) => submit(event.currentTarget)}>
         <TextInput
           value={value}
@@ -109,7 +111,6 @@ export default function AdminUsersRoute() {
           placeholder="Search for users"
         />
       </Form>
-
       <div className="border rounded overflow-hidden mb-5">
         <table className="min-w-full divide-y divide-gray-200 ">
           <thead className="bg-gray-50">
@@ -130,11 +131,12 @@ export default function AdminUsersRoute() {
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Sessions
+                Role
               </th>
               <th />
             </tr>
           </thead>
+
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => (
               <tr key={user.id}>
@@ -143,7 +145,7 @@ export default function AdminUsersRoute() {
                   {dayjs(user.createdAt).format("M/D/YY")}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap flex justify-between items-center gap-3">
-                  {user.sessions.length} Active
+                  {user.isAdmin ? "Admin" : "User"}
                 </td>
                 <td>
                   <Button onClick={() => setSelectedUser(user)}>
@@ -155,7 +157,6 @@ export default function AdminUsersRoute() {
           </tbody>
         </table>
       </div>
-
       <div className="flex justify-center align-center gap-3">
         <Button
           onClick={() => submit({ username: value, page: page - 1 })}
@@ -181,37 +182,64 @@ export default function AdminUsersRoute() {
       >
         {selectedUser && (
           <div>
-            {selectedUser.sessions.length > 0 && (
-              <p className="mb-3">Sessions:</p>
-            )}
-            {selectedUser.sessions.map((session, i) => {
-              return (
-                <div
-                  key={session.id}
-                  className="mb-3 flex justify-between items-center"
-                >
-                  <p>
-                    <span className="mr-3">{i + 1}.</span>
-                    {dayjs(session.createdAt).format("M/D/YY")}
-                  </p>
-                  <Form method="post">
-                    <input
-                      hidden
-                      readOnly
-                      name="sessionId"
-                      value={session.id}
-                    />
-                    <button
-                      name="intent"
-                      value={Intent.DELETE_SESSION}
-                      className="border border-gray-300 text-gray-300 rounded px-3 py-1 hover:text-white hover:bg-red-500 hover:border-red-500 transition-colors"
-                    >
-                      <TrashIcon className="size-4" />
-                    </button>
-                  </Form>
-                </div>
-              );
-            })}
+            <table className="w-full mb-5">
+              <tbody>
+                <tr className="border-b border-dashed">
+                  <td className="pr-3 py-1">Joined</td>
+                  <td className="pl-3 py-1 text-end">
+                    {dayjs(selectedUser.createdAt).format("M/D/YY")}
+                  </td>
+                </tr>
+                <tr className="border-b border-dashed">
+                  <td className="pr-3 py-1">Role</td>
+                  <td className="pl-3 py-1 text-end">
+                    {selectedUser.isAdmin ? "Admin" : "User"}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="pr-3 py-1">Sessions:</td>
+                </tr>
+                <tr>
+                  <td>
+                    {selectedUser.sessions.length === 0 && (
+                      <p className="mb-1">No active sessions</p>
+                    )}
+                  </td>
+                </tr>
+                {selectedUser.sessions.map((session, i) => {
+                  return (
+                    <tr key={session.id}>
+                      <td className="pr-3 py-1 w-full">
+                        <p>
+                          <span className="mr-3">{i + 1}.</span>
+                          {dayjs(session.createdAt).format("M/D/YY")}
+                        </p>
+                      </td>
+                      <td className="text-end">
+                        <Form method="post">
+                          <input
+                            hidden
+                            readOnly
+                            name="sessionId"
+                            value={session.id}
+                          />
+                          <button
+                            name="intent"
+                            value={Intent.DELETE_SESSION}
+                            className="border border-gray-300 text-gray-300 rounded px-3 py-1 hover:text-white hover:bg-red-500 hover:border-red-500 transition-colors"
+                          >
+                            <TrashIcon className="size-4" />
+                          </button>
+                        </Form>
+                      </td>
+                    </tr>
+                  );
+                })}
+                <tr className="border-b border-dashed">
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
             <Button variant="red" onClick={() => setStagedForDeletion(true)}>
               Delete User
             </Button>

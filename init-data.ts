@@ -1,13 +1,13 @@
-import { db } from './app/db';
-import { user } from './app/db/schema';
-import { faker } from '@faker-js/faker';
-import argon2 from 'argon2';
-import { post } from '~/db/schema';
-import { v4 as uuid } from 'uuid';
+import { b } from "./app/db";
+import { user } from "./app/db/schema";
+import { faker } from "@faker-js/faker";
+import argon2 from "argon2";
+import { post } from "~/db/schema";
+import { v4 as uuid } from "uuid";
 
 async function createUsersAndPosts() {
   try {
-    const hashedPassword = await argon2.hash('password');
+    const hashedPassword = await argon2.hash("password");
 
     for (let i = 0; i < 1000; i++) {
       const userId = uuid();
@@ -32,13 +32,15 @@ async function createUsersAndPosts() {
 
     await db.insert(user).values({
       id: uuid(),
-      username: 'logan',
+      username: "logan",
       password: hashedPassword,
+      bio: "Creator of the app",
+      isAdmin: 1,
     });
 
-    console.log('Users created successfully.');
+    console.log("Users created successfully.");
   } catch (error) {
-    console.error('Error creating users:', error);
+    console.error("Error creating users:", error);
   }
 }
 
@@ -46,9 +48,9 @@ async function deleteUsers() {
   try {
     await db.delete(user);
 
-    console.log('Old users deleted successfully.');
+    console.log("Old users deleted successfully.");
   } catch (error) {
-    console.error('Error deleting users:', error);
+    console.error("Error deleting users:", error);
   }
 }
 
@@ -56,9 +58,9 @@ async function deletePosts() {
   try {
     await db.delete(user);
 
-    console.log('Old users deleted successfully.');
+    console.log("Old users deleted successfully.");
   } catch (error) {
-    console.error('Error deleting users:', error);
+    console.error("Error deleting users:", error);
   }
 }
 

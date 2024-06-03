@@ -4,6 +4,8 @@ import { handleErrorResponse } from "~/utils/handleError";
 import { requireUserSession } from "~/utils/requireUserSession";
 
 export async function deleteSession({ request }: ActionFunctionArgs) {
+  await requireUserSession(request, { isAdminRoute: true });
+
   await requireUserSession(request);
 
   const formData = await request.formData();
