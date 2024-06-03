@@ -45,7 +45,7 @@ export function Modal({
     >
       <div
         className={`
-          bg-white p-6 rounded shadow-lg max-w-md w-full transition-all
+          bg-white p-5 rounded shadow-lg max-w-md w-full m-5 transition-all
           ${isOpenInternal ? "scale-100 opacity-100" : "scale-50 opacity-0"}
         `}
         onClick={(e) => e.stopPropagation()}

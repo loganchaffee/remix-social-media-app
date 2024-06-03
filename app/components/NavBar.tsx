@@ -9,7 +9,7 @@ import { useRouteData } from "~/hooks/useRouteData";
 import { loader as indexLoader } from "~/routes/_app._index/route";
 
 export const Navbar = () => {
-  const { user } = useRouteData<typeof indexLoader>("routes/_app._index");
+  const { user } = useRouteData<typeof indexLoader>("routes/_app");
 
   return (
     <nav className="bg-gray-100 px-6 sticky top-0 z-10">
