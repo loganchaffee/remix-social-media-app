@@ -9,7 +9,7 @@ export function TextInput({ className, type, ...props }: Props) {
     <input
       type={type ?? "text"}
       name="username"
-      className={`border rounded mb-10 block w-full p-1 ${className}`}
+      className={`border rounded block w-full p-1 ${className}`}
       {...props}
     />
   );

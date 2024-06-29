@@ -118,13 +118,34 @@ export default function AdminUsersRoute() {
           </Link>
         </div>
 
-        <Form onChange={(event) => submit(event.currentTarget)}>
+        <Form
+          onChange={(event) => submit(event.currentTarget)}
+          className="flex justify-between items-center gap-3 mb-10"
+        >
           <TextInput
             value={value}
             onChange={(e) => setValue(e.target.value)}
             name="username"
             placeholder="Search for users"
           />
+
+          <Button
+            type="button"
+            onClick={() => submit({ username: value, page: page - 1 })}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span className="w-52">
+            Page {page} of {pages}
+          </span>
+          <Button
+            type="button"
+            onClick={() => submit({ username: value, page: page + 1 })}
+            disabled={page >= pages}
+          >
+            Next
+          </Button>
         </Form>
 
         <div className="border rounded overflow-hidden mb-5">
@@ -165,23 +186,6 @@ export default function AdminUsersRoute() {
               ))}
             </tbody>
           </table>
-        </div>
-        <div className="flex justify-center align-center gap-3">
-          <Button
-            onClick={() => submit({ username: value, page: page - 1 })}
-            disabled={page === 1}
-          >
-            Previous
-          </Button>
-          <span>
-            Page {page} of {pages}
-          </span>
-          <Button
-            onClick={() => submit({ username: value, page: page + 1 })}
-            disabled={page >= pages}
-          >
-            Next
-          </Button>
         </div>
 
         <Modal
