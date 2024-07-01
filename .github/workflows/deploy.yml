@@ -19,8 +19,8 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
-          source: "path/to/your/docker/project"
-          target: "/path/to/remote/location"
+          source: "."
+          target: "/apps/remix-social-media"
 
       - name: SSH into VPS and run Docker Compose
         uses: appleboy/ssh-action@master
@@ -29,6 +29,6 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
-            echo "${{ secrets.ENV_FILE }}" > /path/to/remote/location/.env
+            echo "${{ secrets.ENV_FILE }}" > /apps/remix-social-media/.env
             cd /path/to/remote/location
             docker-compose up -d
