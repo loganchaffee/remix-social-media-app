@@ -1,19 +1,34 @@
-name: Deploy
+name: Deploy to VPS
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
-    name: Build
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: copy file via ssh password
-        uses: appleboy/scp-action@v0.1.7
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Copy project files via SCP
+        uses: appleboy/scp-action@v0.1.0
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT }}
-          key: ${{ secrets.SSHKEY }}
-          target: /var/www/loganchaffee.xyz
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          source: "path/to/your/docker/project"
+          target: "/path/to/remote/location"
+
+      - name: SSH into VPS and run Docker Compose
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script: |
+            echo "${{ secrets.ENV_FILE }}" > /path/to/remote/location/.env
+            cd /path/to/remote/location
+            docker-compose up -d
