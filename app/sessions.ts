@@ -25,8 +25,8 @@ function createDatabaseSessionStorage() {
       maxAge: 604_800, // one week
       path: "/",
       sameSite: "lax",
-      secrets: [process.env.SESSION_SECRET!],
-      secure: true,
+      // secrets: [process.env.SESSION_SECRET!],
+      // secure: true,
     },
     // Create session when calling commitSession while session object has no ID
     async createData(data, expires) {
