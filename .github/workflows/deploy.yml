@@ -31,4 +31,4 @@ jobs:
           script: |
             echo "${{ secrets.ENV_FILE }}" > apps/remix-social-media/.env
             cd apps/remix-social-media
-            docker compose -f docker-compose.yml up --build
+            docker compose -f docker-compose.yml up --build -d
