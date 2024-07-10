@@ -28,8 +28,8 @@ export default function App() {
           <ToastNotification />
 
           <Outlet />
-        </ToastProvider>{" "}
-        <Scripts />{" "}
+        </ToastProvider>
+        <Scripts />
       </body>
     </html>
   );

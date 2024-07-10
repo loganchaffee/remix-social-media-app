@@ -13,6 +13,6 @@ export default defineConfig({
     password: "",
     host: "127.0.0.1",
     port: 3306,
-    database: "remix_book",
+    database: "remix_social_media",
   },
 });
