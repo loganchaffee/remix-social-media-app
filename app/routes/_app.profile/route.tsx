@@ -5,14 +5,20 @@ import {
   useActionData,
   useLoaderData,
   useNavigation,
+  useSubmit,
 } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/Button";
+import { ConfirmationModal } from "~/components/ConfirmationModal";
 import { Spinner } from "~/components/Spinner";
 import { TextInput } from "~/components/TextInput";
 import { useToast } from "~/contexts/ToastContext";
 import { UserService } from "~/services/User.service";
+import { getIntent } from "~/utils/getIntent";
 import { requireUserSession } from "~/utils/requireUserSession";
+import { updateProfile } from "./actions/updateProfile";
+import { handleErrorResponse } from "~/utils/handleError";
+import { deleteProfile } from "./actions/deleteProfile";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user } = await requireUserSession(request);
@@ -20,30 +26,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return json({ user });
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-  // Authenticate user session
-  const { user } = await requireUserSession(request);
+export enum Intent {
+  UpdateProfile = "CREATE_PROFILE",
+  DeleteProfile = "DELETE_PROFILE",
+}
 
-  try {
-    // Get form data
-    const formData = await request.formData();
-    const { username, bio } = Object.fromEntries(formData);
+export async function action(args: ActionFunctionArgs) {
+  const intent = await getIntent(args);
 
-    // Validate form data
-    if (typeof username !== "string" || !username) {
-      return json({ message: "Please enter a valid username" });
-    }
-    if (typeof bio !== "string" && typeof bio !== "undefined") {
-      return json({ message: "Please enter a valid bio" });
-    }
-
-    // Update user
-    await UserService.updateUser(user.id, { username, bio });
-
-    // Alert user for success
-    return json({ message: "Successfully updated profile" });
-  } catch (error) {
-    return json({ error: "Something went wrong" });
+  switch (intent) {
+    case Intent.UpdateProfile:
+      return updateProfile(args);
+    case Intent.DeleteProfile:
+      return deleteProfile(args);
+    default:
+      return handleErrorResponse(new Error("Invalid intent"));
   }
 }
 
@@ -52,16 +49,24 @@ export default function Profile() {
 
   const actionData = useActionData<typeof action>();
 
+  const submit = useSubmit();
+
+  const toast = useToast();
+
   const [formValues, setFormValues] = useState({
     username: user.username,
     bio: user.bio ?? "",
   });
 
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const handleDeleteProfile = () => {
+    submit({ intent: Intent.DeleteProfile }, { method: "post" });
+  };
+
   useEffect(() => {
     setFormValues({ username: user.username, bio: user.bio ?? "" });
   }, [user]);
-
-  const toast = useToast();
 
   useEffect(() => {
     if (actionData) {
@@ -102,16 +107,36 @@ export default function Profile() {
             setFormValues((prev) => ({ ...prev, bio: e.target.value }))
           }
         />
-        <div className="flex">
+        <div className="flex justify-between">
           {isUpdating ? (
             <Spinner />
           ) : (
-            <Button className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg mr-3 w-20 flex justify-center">
+            <Button
+              name="intent"
+              value={Intent.UpdateProfile}
+              className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg mr-3 w-20 flex justify-center"
+            >
               Save
             </Button>
           )}
+
+          <Button
+            type="button"
+            variant="red"
+            onClick={() => setIsConfirming(true)}
+          >
+            Delete Profile
+          </Button>
         </div>
       </Form>
+
+      <ConfirmationModal
+        title="Are you sure you want to delete you profile?"
+        isOpen={isConfirming}
+        onConfirm={handleDeleteProfile}
+        onCancel={() => setIsConfirming(false)}
+        confirmButtonVariant="red"
+      />
     </div>
   );
 }
