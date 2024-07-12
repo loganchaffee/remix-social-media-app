@@ -1,10 +1,11 @@
 import { ActionFunctionArgs, json, redirect } from "@remix-run/node";
-import { Form, Link, useActionData } from "@remix-run/react";
+import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { commitSession, getSession } from "~/sessions";
 import argon2 from "argon2";
 import { useEffect } from "react";
 import { useToast } from "~/contexts/ToastContext";
 import { UserService } from "~/services/User.service";
+import { Spinner } from "~/components/Spinner";
 
 export async function action({ request }: ActionFunctionArgs) {
   // Get form data
@@ -58,6 +59,8 @@ export default function Login() {
 
   const toast = useToast();
 
+  const isNavigating = useNavigation().state !== "idle";
+
   useEffect(() => {
     const error = actionData?.error;
 
@@ -82,8 +85,8 @@ export default function Login() {
           placeholder="Enter password"
         />
         <div className="flex justify-between">
-          <button className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg">
-            Login
+          <button className="text-white bg-blue-500 hover:bg-blue-600 py-1 px-4 rounded-lg w-24 h-8 flex justify-center items-center">
+            {isNavigating ? <Spinner size="sm" /> : "Login"}
           </button>
           <Link to="/signup" className="text-blue-500">
             Sign up instead
