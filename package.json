@@ -8,7 +8,7 @@
     "dev": "node ./server.js",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "cross-env NODE_ENV=production node ./server.js",
-    "init-data": "tsx ./init-data.ts",
+    "init-data": "tsx ./app/scripts/init-data.ts",
     "introspect": "drizzle-kit introspect",
     "typecheck": "tsc"
   },
@@ -20,6 +20,7 @@
     "argon2": "^0.40.1",
     "compression": "^1.7.4",
     "dayjs": "^1.11.11",
+    "dotenv": "^16.4.5",
     "drizzle-orm": "^0.30.9",
     "express": "^4.18.2",
     "isbot": "^4.1.0",

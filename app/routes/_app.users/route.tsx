@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Button } from "~/components/Button";
 import { requireUserSession } from "~/utils/requireUserSession";
 import { UserService } from "~/services/User.service";
+import { TextInput } from "~/components/TextInput";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user } = await requireUserSession(request);
@@ -16,7 +18,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const pageSize = Number(searchParams.get("pageSize") ?? 10);
 
-  const { users, count } = await new UserService().searchUsers({
+  const { users, count } = await UserService.searchUsers({
     searchQuery,
     page,
     pageSize,
@@ -42,13 +44,16 @@ export default function Profile() {
   return (
     <div>
       <h1 className="text-4xl font-bold mb-10">Search Users</h1>
-      <Form onChange={(event) => submit(event.currentTarget)}>
-        <input
+      <Form
+        onChange={(event) => submit(event.currentTarget)}
+        className="flex items-center mb-10 border-1"
+      >
+        <MagnifyingGlassIcon className="size-6 mr-3 text-gray-500" />
+        <TextInput
           value={value}
           onChange={(e) => setValue(e.target.value)}
           name="username"
           placeholder="Search for users"
-          className="border-b mb-10 block w-full p-1"
         />
       </Form>
       {users.map((user) => (

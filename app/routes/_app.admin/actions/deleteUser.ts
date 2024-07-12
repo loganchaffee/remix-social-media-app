@@ -15,7 +15,7 @@ export async function deleteUser({ request }: ActionFunctionArgs) {
       return handleErrorResponse(new Error("Invalid session ID"));
     }
 
-    await new UserService().deleteUser(id);
+    await UserService.deleteUser(id);
 
     return null;
   } catch (error) {

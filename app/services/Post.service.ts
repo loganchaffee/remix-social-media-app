@@ -5,13 +5,13 @@ import { db } from "~/db";
 import { v4 as uuid } from "uuid";
 
 export class PostService {
-  async deleteUserOwnPost(userId: string, postId: string) {
+  static async deleteUserOwnPost(userId: string, postId: string) {
     await db
       .delete(post)
       .where(and(eq(post.userId, userId), eq(post.id, postId)));
   }
 
-  async createPost(userId: string, content: string) {
+  static async createPost(userId: string, content: string) {
     const postId = uuid();
 
     await db.insert(post).values({
@@ -21,7 +21,11 @@ export class PostService {
     });
   }
 
-  async getUserNewsFeedPage(userId: string, page: number, pageSize: number) {
+  static async getUserNewsFeedPage(
+    userId: string,
+    page: number,
+    pageSize: number
+  ) {
     const posts = await union(
       // Posts from those the user follows
       db

@@ -20,7 +20,7 @@ type SearchUsersFilters = {
 };
 
 export class UserService {
-  async createUser(username: string, password: string) {
+  static async createUser(username: string, password: string) {
     const [duplicate] = await db
       .select()
       .from(user)
@@ -49,7 +49,7 @@ export class UserService {
     return newUser;
   }
 
-  async getUserById<T extends GetUserOptions>(
+  static async getUserById<T extends GetUserOptions>(
     id: string,
     opt?: T
   ): Promise<T["includePassword"] extends true ? User : UserWithoutPassword> {
@@ -76,7 +76,7 @@ export class UserService {
     }
   }
 
-  async getUserByUsername<T extends GetUserOptions>(
+  static async getUserByUsername<T extends GetUserOptions>(
     username: string,
     opt?: T
   ): Promise<T["includePassword"] extends true ? User : UserWithoutPassword> {
@@ -106,11 +106,11 @@ export class UserService {
     }
   }
 
-  async updateUser(id: string, updates: Partial<User>) {
+  static async updateUser(id: string, updates: Partial<User>) {
     await db.update(user).set(updates).where(eq(user.id, id));
   }
 
-  async searchUsers({
+  static async searchUsers({
     searchQuery,
     page,
     pageSize,
@@ -161,7 +161,11 @@ export class UserService {
     return { users: formattedUsers, count: userCount };
   }
 
-  async adminSearchUsers({ searchQuery, page, pageSize }: SearchUsersFilters) {
+  static async adminSearchUsers({
+    searchQuery,
+    page,
+    pageSize,
+  }: SearchUsersFilters) {
     const userPromise = db
       .select({
         id: user.id,
@@ -212,11 +216,11 @@ export class UserService {
     return { users: formattedUsers, count: userCount };
   }
 
-  async deleteUserSession(sessionId: string) {
+  static async deleteUserSession(sessionId: string) {
     await db.delete(session).where(eq(session.id, sessionId));
   }
 
-  async deleteUser(userId: string) {
+  static async deleteUser(userId: string) {
     await db.delete(user).where(eq(user.id, userId));
   }
 }

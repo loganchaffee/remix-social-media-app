@@ -17,10 +17,10 @@ export async function deletePost({ request }: ActionFunctionArgs) {
       );
     }
 
-    await new PostService().deleteUserOwnPost(user.id, id);
+    await PostService.deleteUserOwnPost(user.id, id);
 
     return json(null);
   } catch (error) {
-    return handleErrorResponse(error, "Failed to delete post");
+    return handleErrorResponse(error);
   }
 }

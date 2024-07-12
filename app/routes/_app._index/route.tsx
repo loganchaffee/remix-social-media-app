@@ -1,5 +1,10 @@
 import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
-import { useActionData, useFetcher, useLoaderData } from "@remix-run/react";
+import {
+  Link,
+  useActionData,
+  useFetcher,
+  useLoaderData,
+} from "@remix-run/react";
 import { json } from "@remix-run/node";
 import { LoaderFunctionArgs } from "react-router";
 import { useState, useEffect } from "react";
@@ -15,6 +20,7 @@ import { useToast } from "~/contexts/ToastContext";
 import { isDefined } from "~/utils/isDefined";
 import { handleErrorResponse } from "~/utils/handleError";
 import { getIntent } from "~/utils/getIntent";
+import { faker } from "@faker-js/faker";
 
 export const meta: MetaFunction = () => {
   return [
@@ -53,11 +59,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const pageSize = Number(searchParams.get("pageSize") ?? 10);
 
-  const posts = await new PostService().getUserNewsFeedPage(
-    user.id,
-    page,
-    pageSize
-  );
+  const posts = await PostService.getUserNewsFeedPage(user.id, page, pageSize);
 
   return json({ posts, page, pageSize, user });
 }
@@ -142,6 +144,20 @@ export default function Index() {
         {posts.map((post) => (
           <Post key={post.id} post={post} deletePost={deletePost} />
         ))}
+        {posts.length === 0 && (
+          <div className="mt-10">
+            <p className="text-center text-gray-500">
+              You are not following anyone yet.
+            </p>
+            <p className="text-center text-gray-500">
+              Find people to follow{" "}
+              <Link to="/users" className="text-blue-500">
+                here
+              </Link>
+              .
+            </p>
+          </div>
+        )}
       </InfiniteScroller>
       {fetcher.state === "loading" && (
         <div className="flex justify-center">

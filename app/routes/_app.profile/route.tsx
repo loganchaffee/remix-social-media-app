@@ -38,7 +38,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     // Update user
-    await new UserService().updateUser(user.id, { username, bio });
+    await UserService.updateUser(user.id, { username, bio });
 
     // Alert user for success
     return json({ message: "Successfully updated profile" });

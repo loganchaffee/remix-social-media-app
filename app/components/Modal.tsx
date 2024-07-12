@@ -10,9 +10,6 @@ type Props = {
   hasCloseButton?: boolean;
 };
 
-let timeOutId1: NodeJS.Timeout | null = null;
-let timeOutId2: NodeJS.Timeout | null = null;
-
 export function Modal({
   children,
   title,
@@ -26,7 +23,7 @@ export function Modal({
   const internalClose = () => {
     setIsOpenInternal(false);
 
-    timeOutId1 = setTimeout(() => {
+    setTimeout(() => {
       onClose();
     }, 200);
   };
@@ -38,7 +35,7 @@ export function Modal({
   return (
     <div
       className={`
-        fixed inset-0 flex justify-center items-center  transition-colors
+        fixed inset-0 flex justify-center items-center  transition-colors z-50
         ${isOpenInternal ? "visible bg-black/20" : "invisible"}
       `}
       onClick={internalClose}

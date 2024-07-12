@@ -45,8 +45,8 @@ export function PostInput({ addPost }: Props) {
   }
 
   return (
-    <Form method="post" onSubmit={handleSubmit}>
-      <div className="flex flex-col mb-5 border rounded p-3 bg-gray-100">
+    <Form method="post" onSubmit={handleSubmit} className="mb-5">
+      <div className="flex flex-col">
         <textarea
           ref={inputRef}
           name="content"

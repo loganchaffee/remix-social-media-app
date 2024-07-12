@@ -25,7 +25,7 @@ export async function requireUserSession(
   let user: UserWithoutPassword;
 
   try {
-    user = await new UserService().getUserById(userId);
+    user = await UserService.getUserById(userId);
   } catch (error) {
     throw redirect("/login", {
       headers: {

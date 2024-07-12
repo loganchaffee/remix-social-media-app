@@ -1,13 +1,15 @@
-import { b } from "./app/db";
-import { user } from "./app/db/schema";
+import "dotenv/config";
 import { faker } from "@faker-js/faker";
 import argon2 from "argon2";
-import { post } from "~/db/schema";
+import { post, user } from "~/db/schema";
 import { v4 as uuid } from "uuid";
+import { db } from "~/db";
 
 async function createUsersAndPosts() {
   try {
-    const hashedPassword = await argon2.hash("password");
+    const hashedPassword = await argon2.hash(
+      process.env.DEFAULT_USER_PASSWORD!
+    );
 
     for (let i = 0; i < 1000; i++) {
       const userId = uuid();
@@ -30,45 +32,13 @@ async function createUsersAndPosts() {
       }
     }
 
-    await db.insert(user).values({
-      id: uuid(),
-      username: "logan",
-      password: hashedPassword,
-      bio: "Creator of the app",
-      isAdmin: 1,
-    });
-
     console.log("Users created successfully.");
   } catch (error) {
     console.error("Error creating users:", error);
   }
 }
 
-async function deleteUsers() {
-  try {
-    await db.delete(user);
-
-    console.log("Old users deleted successfully.");
-  } catch (error) {
-    console.error("Error deleting users:", error);
-  }
-}
-
-async function deletePosts() {
-  try {
-    await db.delete(user);
-
-    console.log("Old users deleted successfully.");
-  } catch (error) {
-    console.error("Error deleting users:", error);
-  }
-}
-
 async function main() {
-  await deleteUsers();
-
-  await deletePosts();
-
   await createUsersAndPosts();
 
   process.exit(0);

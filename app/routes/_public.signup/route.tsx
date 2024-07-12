@@ -23,7 +23,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   try {
     // Create new user
-    const user = await new UserService().createUser(username, password);
+    const user = await UserService.createUser(username, password);
 
     // Create new session
     const session = await getSession();

@@ -24,7 +24,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   try {
     // Get exiting user
-    const currentUser = await new UserService().getUserByUsername(username, {
+    const currentUser = await UserService.getUserByUsername(username, {
       includePassword: true,
     });
 
@@ -76,6 +76,7 @@ export default function Login() {
           placeholder="Enter username"
         />
         <input
+          type="password"
           name="password"
           className="border-b mb-10 block w-full p-1"
           placeholder="Enter password"

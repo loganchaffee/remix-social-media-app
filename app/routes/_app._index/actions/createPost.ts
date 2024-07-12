@@ -15,10 +15,10 @@ export async function createPost({ request }: ActionFunctionArgs) {
       return handleErrorResponse(new Error("Invalid post content"));
     }
 
-    await new PostService().createPost(user.id, content);
+    await PostService.createPost(user.id, content);
 
     return json(null);
   } catch (error) {
-    return handleErrorResponse(error, "Failed to create post");
+    return handleErrorResponse(error);
   }
 }

@@ -9,10 +9,9 @@ export default defineConfig({
     casing: "camel",
   },
   dbCredentials: {
-    user: "root",
-    password: "",
-    host: "127.0.0.1",
-    port: 3306,
-    database: "remix_social_media",
+    host: process.env.MYSQL_HOST!,
+    database: process.env.MYSQL_DATABASE!,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
   },
 });
