@@ -16,4 +16,4 @@ npm run init-data
 ```
 
 ## Local Development
-This app was built entirely with remix loaders and actions directly querying a MySQL database with Drizzle ORM.
+This app was built entirely with Remix and its loaders and actions directly querying a MySQL database with Drizzle ORM.
