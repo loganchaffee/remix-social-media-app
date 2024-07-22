@@ -1,34 +1,19 @@
-# Welcome to Remix + Vite!
+# Remix Social Media
+### Simple social media site built with Remix
 
-📖 See the [Remix docs](https://remix.run/docs) and the [Remix Vite docs](https://remix.run/docs/en/main/guides/vite) for details on supported features.
+## Local Development
 
-## Development
-
-Run the Express server with Vite dev middleware:
+The simplest way to run this app locally is with Docker Compose:
 
 ```shellscript
-npm run dev
+docker compose up
 ```
 
-## Deployment
+To create fake data to test with, open the node.js container with `docker exec` and run:
 
-First, build your app for production:
-
-```sh
-npm run build
+```shellscript
+npm run init-data
 ```
 
-Then run the app in production mode:
-
-```sh
-npm start
-```
-
-Now you'll need to pick a host to deploy it to.
-
-### DIY
-
-If you're familiar with deploying Express applications you should be right at home. Just make sure to deploy the output of `npm run build`
-
-- `build/server`
-- `build/client`
+## Local Development
+This app was built entirely with remix loaders and actions directly querying a MySQL database with Drizzle ORM.
