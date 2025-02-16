@@ -20,7 +20,6 @@ import { useToast } from "~/contexts/ToastContext";
 import { isDefined } from "~/utils/isDefined";
 import { handleErrorResponse } from "~/utils/handleError";
 import { getIntent } from "~/utils/getIntent";
-import { faker } from "@faker-js/faker";
 
 export const meta: MetaFunction = () => {
   return [
@@ -31,6 +30,7 @@ export const meta: MetaFunction = () => {
     },
   ];
 };
+
 
 export enum Intent {
   CreatePost = "CREATE_POST",
@@ -123,12 +123,12 @@ export default function Index() {
     }
   }, [actionData, toast]);
 
-  // Optomistic delete
+  // Optimistic delete
   function deletePost(id: string) {
     setPosts((prev) => prev.filter((p) => p.id !== id));
   }
 
-  // Optomistic create
+  // Optimistic create
   const addPost = (post: (typeof posts)[0]) => {
     setPosts((prev) => [post, ...prev]);
   };
