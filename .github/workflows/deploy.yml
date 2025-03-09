@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           source: "."
-          target: "apps/remix-social-media"
+          target: "/var/www/remix-social-media"
 
       - name: SSH into VPS and run Docker Compose
         uses: appleboy/ssh-action@master
@@ -29,6 +29,6 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
-            echo "${{ secrets.ENV_FILE }}" > apps/remix-social-media/.env
-            cd apps/remix-social-media
+            echo "${{ secrets.ENV_FILE }}" > /var/www/remix-social-media/.env
+            cd /var/www/remix-social-media
             docker compose -f docker-compose.yml up --build -d
