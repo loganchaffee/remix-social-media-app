@@ -76,7 +76,7 @@ function createDatabaseSessionStorage() {
       return session;
     },
     // Update the session when calling commitSession if the session has an ID
-    async updateData(id, data, expires) {
+    async updateData(id, _, expires) {
       if (expires) {
         await db
           .update(sessionTable)
